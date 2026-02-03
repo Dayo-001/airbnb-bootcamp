@@ -38,7 +38,7 @@ export const createReservation = async ({
     if (!reservation) {
       throw new Error();
     }
-    revalidatePath(`/listings/${listingId}`);
+    revalidatePath(`/trips/v1`);
     return {
       success: true,
       message: "Reservation created successfully",

@@ -16,6 +16,9 @@ export default auth((req) => {
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isListingsRoute = nextUrl.pathname.startsWith(listingsPrefix);
+
+  console.log(isPublicRoute);
 
   if (isAuthRoute) {
     if (isLoggedIn) {
@@ -28,10 +31,11 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  if (isPublicRoute) {
+  if (isPublicRoute || isListingsRoute) {
     return NextResponse.next();
   }
-  if (!isLoggedIn && !isPublicRoute) {
+
+  if (!isLoggedIn && !isPublicRoute && isListingsRoute) {
     let callbackUrl = nextUrl.pathname;
 
     if (nextUrl.search) {
@@ -41,7 +45,7 @@ export default auth((req) => {
     const encodedCallbackUrl = encodeURIComponent(callbackUrl);
 
     return NextResponse.redirect(
-      new URL(`/sign-in?callbackUrl=${encodedCallbackUrl}`, nextUrl)
+      new URL(`/sign-in?callbackUrl=${encodedCallbackUrl}`, nextUrl),
     );
   }
 
