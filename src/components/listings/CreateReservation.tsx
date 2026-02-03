@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -16,7 +17,7 @@ import {
   isWithinInterval,
 } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { priceFormatter } from "@/lib/helpers";
+import { numberOfNights, priceFormatter } from "@/lib/helpers";
 import { useSession } from "next-auth/react";
 import { createReservation } from "@/actions/listing/create-reservation";
 import toast from "react-hot-toast";
@@ -25,6 +26,9 @@ import useReservationCalendarStore from "@/hooks/use-reservation-calendar-store"
 import useGuestFilterPopoverReservationStore from "@/hooks/use-guest-filter-popover-reservation";
 import GuestFilterReservation from "../desktop/GuestFilterReservation";
 import useGuestFilterStore from "@/hooks/use-guest-filter-store";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import useAuthCardDialogStore from "@/hooks/use-auth-card-dialog";
+import { useRouter } from "next/navigation";
 
 type Props = {
   listingId: string;
@@ -41,14 +45,10 @@ const CreateReservation = ({
 }: Props) => {
   const { date, setDate } = useReservationCalendarStore();
   const [isOpen, setIsOpen] = useState(false);
+  const { open: OpenAuthCard } = useAuthCardDialogStore();
+  const router = useRouter();
 
-  const { data } = useSession();
-
-  const numberOfNights = (checkOutDate: Date, checkInDate: Date) => {
-    const days = differenceInCalendarDays(checkOutDate, checkInDate);
-
-    return days;
-  };
+  const user = useCurrentUser();
 
   const handleReset = () => {
     setDate({
@@ -71,33 +71,11 @@ const CreateReservation = ({
   };
 
   const handleReservation = async () => {
-    if (!data) return;
-    if (!data.user.id) {
+    if (!user) {
+      OpenAuthCard();
       return;
     }
-    if (date?.to === undefined || date?.from === undefined) {
-      return;
-    }
-    const nights = numberOfNights(date.to, date.from);
-    const totalPrice = nights * price;
-    const guestId = data.user.id;
-
-    const reservation = await createReservation({
-      listingId,
-      guestId,
-      checkInDate: date.from,
-      checkOutDate: date.to,
-      totalPrice,
-      nights,
-      pricePerNight: price,
-    });
-    if (reservation.success) {
-      toast.success("Reservation created");
-      setDate({
-        from: undefined,
-        to: undefined,
-      });
-    }
+    router.push(`/book/stays/${listingId}`);
   };
 
   const isDateDisabled = (date: Date) => {
@@ -119,23 +97,10 @@ const CreateReservation = ({
     });
   };
 
-  const {
-    adultsCount,
-    childrenCount,
-    infantsCount,
-    petsCount,
-    increaseAdultsCount,
-    increaseChildrenCount,
-    increaseInfantsCount,
-    increasePetsCount,
-    decreaseAdultsCount,
-    decreaseChildrenCount,
-    decreaseInfantsCount,
-    decreasePetsCount,
-  } = useGuestFilterStore();
+  const { adultsCount, childrenCount, infantsCount, petsCount } =
+    useGuestFilterStore();
 
   const {
-    open,
     isOpen: isGuestFilterOpen,
     toggle,
     close,
@@ -203,7 +168,7 @@ const CreateReservation = ({
               </div>
             </PopoverContent>
           </Popover>
-          <Popover open={isGuestFilterOpen} onOpenChange={close}>
+          <Popover open={isGuestFilterOpen}>
             <PopoverAnchor asChild>
               <div
                 onClick={toggle}

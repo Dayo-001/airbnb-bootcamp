@@ -29,6 +29,17 @@ export type ListingWithPhotos = Prisma.ListingGetPayload<{
   };
 }>;
 
+export type Trips = Prisma.ReservationGetPayload<{
+  include: {
+    listing: {
+      include: {
+        photos: true;
+        user: true;
+      };
+    };
+  };
+}>;
+
 export type ListingWithRelations = Prisma.ListingGetPayload<{
   include: {
     photos: true;

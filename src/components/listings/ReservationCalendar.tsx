@@ -6,6 +6,7 @@ import { differenceInCalendarDays, format, isWithinInterval } from "date-fns";
 import useReservationCalendarStore from "@/hooks/use-reservation-calendar-store";
 import { Reservation } from "../../../generated/prisma";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { dateRangeText } from "@/lib/helpers";
 
 type Props = {
   reservations: Reservation[];
@@ -55,11 +56,6 @@ const ReservationCalendar = ({ reservations, location }: Props) => {
   const numberOfNights =
     date?.from && date?.to ? differenceInCalendarDays(date.to, date.from) : 0;
 
-  const dateRangeText =
-    date?.from && date?.to
-      ? `${format(date.from, "MMM dd")} - ${format(date.to, "MMM dd, yyyy")}`
-      : null;
-
   return (
     <div className="w-full flex flex-col gap-4">
       <div className="flex flex-col gap-2">
@@ -71,7 +67,8 @@ const ReservationCalendar = ({ reservations, location }: Props) => {
               : "Select check-in date"}
         </p>
         <p className="text-xs text-muted-foreground">
-          {dateRangeText || "Add your travel dates for exact pricing"}
+          {dateRangeText(date?.from, date?.to) ||
+            "Add your travel dates for exact pricing"}
         </p>
       </div>
       <Calendar
